@@ -1,0 +1,10 @@
+Potential algos:
+
+1). examine stocks on our own, look for identifiers or trends that lead to accurate predictions of stock movement. Looking at stocks daily, comparing where you predicted they would go to where they actually went. 
+-research similar methods and find overlaps between successful algos
+-select group of stocks to consistently look at
+
+2.) examine industry indexes, look for volatility to indicate trends, examine stocks within that industry for potenital trades
+
+3.) create two pointers that examine historical prices 14 days apart, if the later date pointer is higher than the earlier date pointer by a certain threshold, gather the oscillator and moving average data for the stock at the earlier date pointer. Do this many times to assemble database of hopefully accurate predictors for price movement.
+-average good and bad oscillator numbers, have a function that computes the difference between these values to make predictions. Dynamically update averages with time.
