@@ -1,28 +1,53 @@
-import datetime as dt 
-import matplotlib.pyplot as plt 
-from matplotlib import style
-import pandas as pd 
-import pandas_datareader.data as web 
+from Portfolio.MeanVarianceOptimizationPortfolioConstructionModel import MeanVarianceOptimizationPortfolioConstructionModel
+from TechnologyUniverseModule import TechnologyUniverseModule
+import pandas as pd
+from training_model2 import training_model
 
-style.use('ggplot')
+class FundamentalMLalgo(QCAlgorithm):
 
-start = dt.datetime(2000,1,1)
-end = dt.datetime(2016,1,1)
+    def Initialize(self):
+        self.SetStartDate(2020, 7, 1)  # Set Start Date
+        self.SetEndDate(2020, 7, 1) #set End Date
+        self.SetCash(1000)  # Set Strategy Cash
 
-# df = web.DataReader('TSLA', 'yahoo', start, end)
-# print(df.head(10))
-# df.to_csv('tsla.csv')
+        self.AddUniverse(self.MyCoarseFilterFunction, self.MyFineFundamentalFunction)
+        
+        self.SetPortfolioConstruction(MeanVarianceOptimizationPortfolioConstructionModel())
+        
+        self.SetRiskManagement(TrailingStopRiskManagementModel(0.03))
+        
+        #add S&P500 benchmark
+        self.AddEquity("SPY", Resolution.Daily)
+        self.SetBenchmark("SPY")
+        
+        train_model = training_model(ViewUniverse())
+    
+    def ViewUniverse(self):
+        for universe in self.UniverseManager.Values:
+            if universe is UserDefinedUniverse:
+                continue
+            symbols = universe.Members.Keys
+            symbol_list = []
+            
+            for symbol in symbols:
+                symbol_list.append(symbol)
+        return symbol_list
+        
+        
+    def MyCoarseFilterFunction(self, coarse):
+        sortedByDollarVolume = sorted(coarse, key=lambda x: x.DollarVolume, reverse=True)
+        filtered = [ x.Symbol for x in sortedByDollarVolume 
+                  if x.Price > 10 and x.DollarVolume > 10000000 ]
+        return filtered[:500]
 
-df = pd.read_csv('tsla.csv',parse_dates=True, index_col=0)
+    def MyFineFundamentalFunction(self, fine):
+        pass
 
-# df['100ma'] =  df['Adj Close'].rolling(window=100, min_periods=0).mean()
-df_ohlc = df['Adj Close'].resample('10D').ohlc()
-df_volume = df['Volume'].resample('10D').sum()
-print(df_ohlc.head())
-
-ax1 = plt.subplot2grid((6,1), (0,0), rowspan=5, colspan=1)
-
-# ax1.plot(df.index, df['Adj Close'])
-# ax1.plot(df.index, df['100ma'])
-
-# plt.show()
+    def OnData(self, data):
+        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+            Arguments:
+                data: Slice object keyed by symbol containing the stock data
+        '''
+        '''
+        use prediction model created in training_model to examine stock universe and make trades based on model.
+        '''
